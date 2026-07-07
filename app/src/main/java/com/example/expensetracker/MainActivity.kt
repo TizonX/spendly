@@ -2,6 +2,7 @@ package com.example.expensetracker
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,7 +17,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        requestSmsPermissionIfNeeded()
+        requestPermissionsIfNeeded()
         setContent {
             ExpenseTrackerTheme {
                 AppScaffold {
@@ -26,15 +27,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun requestSmsPermissionIfNeeded() {
+    private fun requestPermissionsIfNeeded() {
+        val permissions = mutableListOf<String>()
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.RECEIVE_SMS),
-                0
-            )
+            permissions.add(Manifest.permission.RECEIVE_SMS)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        if (permissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 0)
         }
     }
 }
