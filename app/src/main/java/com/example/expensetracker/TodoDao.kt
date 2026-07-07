@@ -54,8 +54,10 @@ WHERE id = :id
     @Query("""
 SELECT tag
 FROM todo_items
-WHERE payee = :payee
+WHERE LOWER(TRIM(payee)) = LOWER(TRIM(:payee))
 AND tag IS NOT NULL
+AND tag != 'UPI'
+AND tag != 'Other'
 GROUP BY tag
 ORDER BY COUNT(*) DESC
 LIMIT 1
@@ -66,6 +68,8 @@ LIMIT 1
 SELECT tag
 FROM (SELECT tag, amount FROM todo_items ORDER BY createdAt DESC LIMIT 50)
 WHERE tag IS NOT NULL
+AND tag != 'UPI'
+AND tag != 'Other'
 AND CAST(amount AS REAL) BETWEEN :minAmount AND :maxAmount
 GROUP BY tag
 ORDER BY COUNT(*) DESC
