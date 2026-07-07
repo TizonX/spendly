@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!--
+        Bold "S" traced as a single open cubic-bezier path.
+        Starts top-right of the upper bump, sweeps through top arch,
+        crosses to center, sweeps through bottom arch, ends bottom-left.
+        Round caps give the strokes a clean, modern finish.
+    -->
+    <path
+        android:pathData="
+            M 68,40
+            C 68,28 56,23 46,27
+            C 36,31 32,42 54,54
+            C 76,66 72,77 62,81
+            C 52,85 38,82 38,70"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>
