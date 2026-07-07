@@ -47,11 +47,14 @@ class SmsReceiver : BroadcastReceiver() {
 
                 CoroutineScope(Dispatchers.IO).launch {
                     val db = AppDatabase.getDatabase(context)
-                    // ⭐ Smart tag prediction
-                    val predictedTag = db.todoDao()
-                        .getMostUsedTagForPayee(payee)
-
-                    val finalTag = predictedTag ?: "UPI"
+                    val amountDouble = amount.toDoubleOrNull() ?: 0.0
+                    val finalTag =
+                        db.todoDao().getMostUsedTagForPayee(payee)
+                            ?: db.todoDao().getMostUsedTagNearAmount(
+                                amountDouble * 0.8,
+                                amountDouble * 1.2
+                            )
+                            ?: "Other"
 
                     db.todoDao().insert(
                         TodoItem(
