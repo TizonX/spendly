@@ -42,24 +42,38 @@ android {
     }
 }
 
+fun showApkPopup(apkFile: File) {
+    val folder = apkFile.parent
+    exec {
+        commandLine(
+            "osascript",
+            "-e", "set apkFolder to \"$folder\"",
+            "-e", "try",
+            "-e", "  set r to button returned of (display dialog \"APK generated successfully!\" & return & return & apkFolder with title \"Build Complete\" buttons {\"Dismiss\", \"Open in Finder\"} default button \"Open in Finder\")",
+            "-e", "  if r is \"Open in Finder\" then do shell script \"open \" & quoted form of apkFolder",
+            "-e", "end try"
+        )
+        isIgnoreExitValue = true
+    }
+}
+
 afterEvaluate {
-    listOf("assembleDebug", "assembleRelease").forEach { taskName ->
+    // Covers: Build > Build APK(s) and Generate Signed APK wizard
+    listOf("assembleDebug", "assembleRelease", "packageDebug", "packageRelease").forEach { taskName ->
         tasks.findByName(taskName)?.doLast {
-            val variant = taskName.removePrefix("assemble").lowercase()
-            val apkDir = layout.buildDirectory.dir("outputs/apk/$variant").get().asFile
-            val apk = apkDir.walkTopDown().firstOrNull { it.name.endsWith(".apk") } ?: return@doLast
-            val folder = apk.parent
-            exec {
-                commandLine(
-                    "osascript",
-                    "-e", "set apkFolder to \"$folder\"",
-                    "-e", "try",
-                    "-e", "  set r to button returned of (display dialog \"APK generated successfully!\" & return & return & apkFolder with title \"Build Complete\" buttons {\"Dismiss\", \"Open in Finder\"} default button \"Open in Finder\")",
-                    "-e", "  if r is \"Open in Finder\" then do shell script \"open \" & quoted form of apkFolder",
-                    "-e", "end try"
-                )
-                isIgnoreExitValue = true
+            val variant = when {
+                taskName.endsWith("Release") -> "release"
+                else -> "debug"
             }
+            // Check both standard build output and wizard output (app/release/)
+            val candidates = listOf(
+                layout.buildDirectory.dir("outputs/apk/$variant").get().asFile,
+                projectDir.resolve(variant)
+            )
+            val apk = candidates
+                .flatMap { dir -> if (dir.exists()) dir.walkTopDown().filter { it.name.endsWith(".apk") }.toList() else emptyList() }
+                .maxByOrNull { it.lastModified() } ?: return@doLast
+            showApkPopup(apk)
         }
     }
 }
