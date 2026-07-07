@@ -32,10 +32,12 @@ object UpiParser {
                 lower.contains("sent")
     }
 
-    // ✅ Extract Amount (handles commas)
+    // ✅ Extract Amount (handles Rs./INR/₹ with commas)
     fun extractAmount(message: String): String? {
-        val regex = Regex("(rs\\.?|inr)\\s*([0-9,]+\\.?[0-9]*)", RegexOption.IGNORE_CASE)
-
+        val regex = Regex(
+            "(₹|rs\\.?|inr)\\s*([0-9,]+\\.?[0-9]*)",
+            RegexOption.IGNORE_CASE
+        )
         return regex.find(message)
             ?.groups?.get(2)?.value
             ?.replace(",", "")
@@ -44,7 +46,14 @@ object UpiParser {
     // ✅ Extract Payee (handles multiple formats)
     fun extractPayee(message: String): String {
 
-        // 🔥 1. CARD (fix: last "on" use karo)
+        // 🔥 1. CARD — "at MERCHANT on DD-Mon-YY" (HDFC, ICICI, Axis, SBI style)
+        val cardAtRegex = Regex("at ([A-Za-z0-9 .&*_-]+?) on \\d{2}-[A-Za-z]{3}-\\d{2,4}", RegexOption.IGNORE_CASE)
+        val cardAtMatch = cardAtRegex.find(message)
+        if (cardAtMatch != null) {
+            return cardAtMatch.groups[1]?.value?.trim() ?: "Unknown"
+        }
+
+        // "on DD-Mon-YY on MERCHANT" (older format)
         val cardRegex = Regex("on \\d{2}-[A-Za-z]{3}-\\d{2} on ([A-Za-z0-9 .&]+?)(?:\\.|$)", RegexOption.IGNORE_CASE)
         val cardMatch = cardRegex.find(message)
         if (cardMatch != null) {
